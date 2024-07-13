@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -53,4 +54,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(Message::class,'receiver_id');
     }
+    public function lastMessage()
+    {
+        return Message::where(function ($query){
+            $query->where('sender_id',$this->id)->where('receiver_id',auth()->id());
+        })->orWhere(function ($query){
+            $query->where('sender_id',auth()->id())->where('receiver_id',$this->id);
+        })->latest()->first();
+    }
+
 }

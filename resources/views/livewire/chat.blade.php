@@ -19,13 +19,14 @@
 			<!-- Contact List -->
 			<div class="overflow-y-auto h-[calc(100vh-73px)] p-3 mb-9 pb-20">
 				@foreach($users as $user)
-					<div wire:click="addToMessage({{$user->id}})" class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+					<div wire:click="addToMessage({{$user->id}})" class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md {{$user->id === $receiver?->id ? 'bg-gray-100' : ''}}">
 						<div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
 							<img src="{{\Creativeorange\Gravatar\Facades\Gravatar::get($user->email)}}" alt="User Avatar" class="w-12 h-12 rounded-full">
 						</div>
 						<div class="flex-1">
+							@php($lastMessage = $user->lastMessage())
 							<h2 class="text-lg font-semibold">{{$user->name}}</h2>
-							<p class="text-gray-600">...</p>
+							<p class="text-gray-600">{{!empty($lastMessage) ? $lastMessage->message : '...'}}</p>
 						</div>
 					</div>
 				@endforeach
@@ -47,20 +48,20 @@
 							<!-- Outgoing Message -->
 							<div class="flex justify-end mb-4 cursor-pointer">
 								<div class="flex max-w-96 bg-indigo-500 text-white rounded-lg p-3 gap-3">
-									<p>Hi Alice! I'm good, just finished a great book. How about you?</p>
+									<p>{{$message->message}}</p>
 								</div>
 								<div class="w-9 h-9 rounded-full flex items-center justify-center ml-2">
-									<img src="https://placehold.co/200x/b7a8ff/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="My Avatar" class="w-8 h-8 rounded-full">
+									<img src="{{\Creativeorange\Gravatar\Facades\Gravatar::get(auth()->user()->email)}}" alt="My Avatar" class="w-8 h-8 rounded-full">
 								</div>
 							</div>
 						@else
 							<!-- Incoming Message -->
 							<div class="flex mb-4 cursor-pointer">
 								<div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
-									<img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
+									<img src="{{\Creativeorange\Gravatar\Facades\Gravatar::get($message->sender->email)}}" alt="User Avatar" class="w-8 h-8 rounded-full">
 								</div>
 								<div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
-									<p class="text-gray-700">Hey Bob, how's it going?</p>
+									<p class="text-gray-700">{{$message->message}}</p>
 								</div>
 							</div>
 						@endif
@@ -79,7 +80,7 @@
 					<footer class="bg-white border-t border-gray-300 p-4 absolute bottom-[64px] w-full">
 						<div class="flex items-center">
 							<input wire:model="message" type="text" placeholder="Type a message..." class="w-full p-2 rounded-md border border-gray-400 focus:outline-none focus:border-blue-500">
-							<button class="bg-indigo-500 text-white px-4 py-2 rounded-md ml-2">Send</button>
+							<button wire:click="submit()" class="bg-indigo-500 text-white px-4 py-2 rounded-md ml-2">Send</button>
 						</div>
 					</footer>
 				</div>
