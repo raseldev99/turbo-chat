@@ -1,4 +1,43 @@
 <div>
+    <style>
+        .typing-indicator {
+            display: inline-block;
+            width: 70px;
+            height: 20px;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            margin: 0 1px;
+            background-color: #333;
+            border-radius: 50%;
+            opacity: 0;
+            animation: blink 1.4s infinite both;
+        }
+
+        .typing-indicator span:nth-child(1) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.4s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes blink {
+            0%, 80%, 100% {
+                opacity: 0;
+            }
+            40% {
+                opacity: 1;
+            }
+        }
+    </style>
 	<!-- component -->
 	<div class="flex h-[calc(100vh-73px)] overflow-hidden">
 		<!-- Sidebar -->
@@ -32,7 +71,6 @@
 				@endforeach
 			</div>
 		</div>
-
 		<!-- Main Chat Area -->
 		<div class="flex-1">
 			@if($receiver)
@@ -73,13 +111,27 @@
 							</div>
 						</div>
 					@endforelse
+                        <div class="mb-4 cursor-pointer hidden" id="is_typing">
+                            <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
+                                <img src="{{\Creativeorange\Gravatar\Facades\Gravatar::get($receiver->email)}}" alt="User Avatar" class="w-8 h-8 rounded-full">
+                            </div>
+                            <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
+                                <p class="text-gray-700">
+                                <div class="typing-indicator">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                </p>
+                            </div>
+                        </div>
 				</div>
 
 				<div class="relative">
 					<!-- Chat Input -->
 					<footer class="bg-white border-t border-gray-300 p-4 absolute bottom-[64px] w-full">
 						<div class="flex items-center">
-							<input wire:model="message" type="text" placeholder="Type a message..." class="w-full p-2 rounded-md border border-gray-400 focus:outline-none focus:border-blue-500">
+							<input wire:model.live="message" type="text" placeholder="Type a message..." class="w-full p-2 rounded-md border border-gray-400 focus:outline-none focus:border-blue-500">
 							<button wire:click="submit()" class="bg-indigo-500 text-white px-4 py-2 rounded-md ml-2">Send</button>
 						</div>
 					</footer>
@@ -91,4 +143,31 @@
 			@endif
 		</div>
 	</div>
+
+	<script>
+        let receiver_id = null;
+        document.addEventListener('livewire:init', function () {
+            Livewire.on('addToMessage', data => {
+                receiver_id = data?.length > 0 && data[0]
+            });
+        });
+		document.addEventListener('DOMContentLoaded',function (){
+            function debounce(func, wait) {
+                let timeout;
+                return function(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+            let debounceIsTyping = debounce(()=>{
+                document.getElementById('is_typing').style.display = 'none';
+            },1000)
+            Echo.private('typing.'+'{{$sender_id}}').listen('TypingEvent',(event)=>{
+                if(event.sender_id === receiver_id){
+                    document.getElementById('is_typing').style.display = 'flex';
+                    debounceIsTyping()
+                }
+            })
+		})
+	</script>
 </div>

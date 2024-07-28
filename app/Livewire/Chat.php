@@ -3,10 +3,10 @@
 namespace App\Livewire;
 
 use App\Events\MessageSendEvent;
+use App\Events\TypingEvent;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use JetBrains\PhpStorm\NoReturn;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -16,6 +16,7 @@ class Chat extends Component
     public $messages;
     public $sender_id;
     public $message = '';
+    public $ok;
     public function render()
     {
         $this->sender_id = auth()->id();
@@ -31,6 +32,7 @@ class Chat extends Component
     {
         $this->receiver = $user;
         $this->fetchMessage($user);
+        $this->dispatch('addToMessage',$this->receiver->id);
     }
 
     public function submit(): void
@@ -57,10 +59,17 @@ class Chat extends Component
         })->with(['sender:id,name,email','receiver:id,name,email'])->get();
     }
 
-    #[On('echo:private-message.{sender_id},MessageSendEvent')]
+    #[On('echo-private:chat.{sender_id},MessageSendEvent')]
     public function listMessage($event)
     {
-      dd($event);
+      $this->fetchMessage(User::find($event['message']['sender_id']));
+    }
+
+    public function updated($event)
+    {
+        if ($event === 'message'){
+            broadcast(new TypingEvent($this->receiver->id,$this->sender_id))->toOthers();
+        }
     }
 
 }

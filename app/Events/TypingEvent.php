@@ -11,17 +11,18 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MessageSendEvent implements ShouldBroadcastNow
+class TypingEvent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    public $message;
     /**
      * Create a new event instance.
      */
-    public function __construct($message)
+     public $receiver_id;
+     public $sender_id;
+    public function __construct($receiver_id,$sender_id)
     {
-        $this->message = $message;
+        $this->receiver_id = $receiver_id;
+        $this->sender_id = $sender_id;
     }
 
     /**
@@ -32,7 +33,7 @@ class MessageSendEvent implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('chat.'.$this->message['receiver_id']),
+            new PrivateChannel('typing.'.$this->receiver_id),
         ];
     }
 }
